@@ -45,19 +45,86 @@ export default defineConfig({
     },
 
     {
+      name: 'edge',
+      use: { ...devices['Desktop Edge'] },
+    },
+
+    {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
 
-    /* Test against mobile viewports. */
+    /* Test against mobile viewports - iOS devices */
     {
-      name: 'Mobile Chrome',
+      name: 'Mobile Safari - iPhone 12',
+      use: { ...devices['iPhone 12'] },
+    },
+    {
+      name: 'Mobile Safari - iPhone 13',
+      use: { ...devices['iPhone 13'] },
+    },
+    {
+      name: 'Mobile Safari - iPhone 14',
+      use: { ...devices['iPhone 14'] },
+    },
+    {
+      name: 'Mobile Safari - iPhone SE',
+      use: { ...devices['iPhone SE'] },
+    },
+
+    /* Test against mobile viewports - Android devices */
+    {
+      name: 'Mobile Chrome - Pixel 5',
       use: { ...devices['Pixel 5'] },
     },
     {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
+      name: 'Mobile Chrome - Pixel 7',
+      use: { ...devices['Pixel 7'] },
     },
+    {
+      name: 'Mobile Chrome - Galaxy S9+',
+      use: { ...devices['Galaxy S9+'] },
+    },
+
+    /* Test against tablet viewports */
+    {
+      name: 'Tablet - iPad',
+      use: { ...devices['iPad'] },
+    },
+    {
+      name: 'Tablet - iPad Pro',
+      use: { ...devices['iPad Pro'] },
+    },
+
+    /* Custom viewports - Examples of creating your own viewport configurations */
+    // {
+    //   name: 'Custom - Small Mobile',
+    //   use: {
+    //     viewport: { width: 320, height: 568 }, // iPhone 5 size
+    //     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',
+    //     deviceScaleFactor: 2,
+    //     isMobile: true,
+    //     hasTouch: true,
+    //   },
+    // },
+    // {
+    //   name: 'Custom - Large Desktop',
+    //   use: {
+    //     viewport: { width: 2560, height: 1440 }, // 2K display
+    //     deviceScaleFactor: 1,
+    //     isMobile: false,
+    //     hasTouch: false,
+    //   },
+    // },
+    // {
+    //   name: 'Custom - Tablet Landscape',
+    //   use: {
+    //     viewport: { width: 1024, height: 768 }, // iPad landscape
+    //     deviceScaleFactor: 2,
+    //     isMobile: true,
+    //     hasTouch: true,
+    //   },
+    // },
 
     /* Test against branded browsers. */
     // {
