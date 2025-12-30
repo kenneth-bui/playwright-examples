@@ -1,127 +1,25 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * A/B Testing Test Suite - Key Differences from Normal Tests:
+ * A/B Testing Test Suite
  * 
- * NORMAL TESTS:
- * - Test one fixed version of a page
- * - Expect consistent, predictable content
- * - Don't need to handle multiple variants
- * 
- * A/B TESTING TESTS:
- * - Test that different variants can be served
- * - Handle dynamic content that changes per user
- * - Test cookie/session persistence (same user sees same variant)
- * - Verify both variants work correctly
- * - Test variant switching behavior
+ * These tests demonstrate how to test A/B testing scenarios with Playwright.
+ * The key difference from normal tests: A/B tests serve different content to different users,
+ * and use cookies to ensure the same user always sees the same variant.
  */
 
-test.describe('A/B Testing - Key Differences', () => {
+test.describe('A/B Testing', () => {
   
   /**
-   * DIFFERENCE #1: Normal tests expect fixed content
-   * A/B tests must handle dynamic/variable content
+   * Test 1: Try 10 times with cookies cleared (simulating new users)
+   * 
+   * Purpose: Check if different variants can be served to different users.
+   * By clearing cookies before each visit, we simulate a new user each time,
+   * which gives us a chance to see different A/B test variants.
+   * 
+   * Key: Clearing cookies = new user = potentially different variant
    */
-  test('NORMAL TEST vs A/B TEST - Content Expectations', async ({ page }) => {
-    await page.goto('https://the-internet.herokuapp.com/abtest');
-    
-    // NORMAL TEST would do this (expects fixed content):
-    // await expect(page.locator('h3')).toHaveText('Expected Fixed Heading');
-    
-    // A/B TEST does this (handles variable content):
-    const heading = await page.locator('h3').textContent();
-    console.log('Variant received:', heading);
-    
-    // Accept multiple possible variants instead of one fixed value
-    const validVariants = [
-      'A/B Test Control',
-      'A/B Test Variation 1',
-      'No A/B Test'
-    ];
-    
-    // Verify we got one of the valid variants (not a fixed one)
-    expect(validVariants.some(variant => heading?.includes(variant))).toBeTruthy();
-  });
-
-  /**
-   * DIFFERENCE #2: Normal tests don't test cookie persistence
-   * A/B tests verify the same user sees the same variant
-   */
-  test('A/B TEST ONLY - Cookie Persistence (Same User, Same Variant)', async ({ page, context }) => {
-    // First visit - get assigned a variant
-    await page.goto('https://the-internet.herokuapp.com/abtest');
-    const firstVariant = await page.locator('h3').textContent();
-    console.log('First visit variant:', firstVariant);
-    
-    // Visit again WITHOUT clearing cookies - should see SAME variant
-    await page.goto('https://the-internet.herokuapp.com/abtest');
-    const secondVariant = await page.locator('h3').textContent();
-    console.log('Second visit (same session) variant:', secondVariant);
-    
-    // A/B TEST: Same user should see same variant (cookie persistence)
-    expect(firstVariant).toBe(secondVariant);
-    
-    // This is UNIQUE to A/B testing - normal tests don't check this!
-  });
-
-  /**
-   * DIFFERENCE #3: Normal tests don't test variant switching
-   * A/B tests verify new users can get different variants
-   */
-  test('A/B TEST ONLY - Variant Switching (New User, Different Variant)', async ({ context }) => {
-    // Create first browser context (simulates first user)
-    const page1 = await context.newPage();
-    await page1.goto('https://the-internet.herokuapp.com/abtest');
-    const variant1 = await page1.locator('h3').textContent();
-    console.log('User 1 variant:', variant1);
-    await page1.close();
-    
-    // Create NEW browser context with cleared cookies (simulates new user)
-    await context.clearCookies();
-    const page2 = await context.newPage();
-    await page2.goto('https://the-internet.herokuapp.com/abtest');
-    const variant2 = await page2.locator('h3').textContent();
-    console.log('User 2 variant:', variant2);
-    await page2.close();
-    
-    // A/B TEST: Different users might see different variants
-    // (Note: This page might always show same variant, but real A/B tests would vary)
-    expect(variant1).toBeTruthy();
-    expect(variant2).toBeTruthy();
-    
-    // This testing approach is UNIQUE to A/B testing!
-  });
-
-  /**
-   * DIFFERENCE #4: Normal tests verify one specific flow
-   * A/B tests must verify ALL possible variants work correctly
-   */
-  test('A/B TEST ONLY - Test All Variants Work', async ({ page }) => {
-    await page.goto('https://the-internet.herokuapp.com/abtest');
-    
-    const heading = await page.locator('h3').textContent();
-    const content = await page.locator('p').first().textContent();
-    
-    // A/B TEST: Regardless of which variant we got, verify it works
-    // Normal test would only check one specific variant
-    
-    // Check that whichever variant we got, it has valid content
-    expect(heading).toBeTruthy();
-    expect(content).toBeTruthy();
-    expect(content?.length).toBeGreaterThan(10); // Has meaningful content
-    
-    // Verify page is functional regardless of variant
-    const allLinks = await page.locator('a').count();
-    console.log(`Variant "${heading}" has ${allLinks} links - all working`);
-    
-    // This approach ensures ALL variants are tested, not just one
-  });
-
-  /**
-   * DIFFERENCE #5: Normal tests don't track variant assignment
-   * A/B tests need to verify variant assignment logic works
-   */
-  test('A/B TEST ONLY - Try 10 Times to Find Different Variants', async ({ page, context }) => {
+  test('Try 10 Times to Find Different Variants (New Users)', async ({ page, context }) => {
     const variantsSeen = new Map<string, number>(); // Track variant and count
     const allVisits: string[] = []; // Track all visits in order
     
@@ -174,15 +72,17 @@ test.describe('A/B Testing - Key Differences', () => {
     } else {
       console.log('\n✅ Multiple variants detected! The A/B test is working.');
     }
-    
-    // This kind of testing is UNIQUE to A/B testing scenarios!
   });
 
   /**
-   * Additional test: Try refreshing 10 times without clearing cookies
-   * This simulates the same user refreshing the page multiple times
+   * Test 2: Refresh 10 times without clearing cookies (same user)
+   * 
+   * Purpose: Verify cookie persistence - the same user should always see the same variant.
+   * By NOT clearing cookies, we simulate the same user refreshing the page.
+   * 
+   * Key: Keeping cookies = same user = should see same variant (cookie persistence)
    */
-  test('A/B TEST - Refresh 10 Times (Same Session)', async ({ page }) => {
+  test('Refresh 10 Times (Same Session - Cookie Persistence)', async ({ page }) => {
     const variantsSeen = new Map<string, number>();
     const allVisits: string[] = [];
     
