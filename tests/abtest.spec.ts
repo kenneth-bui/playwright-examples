@@ -31,7 +31,7 @@ test.describe('A/B Testing', () => {
       await context.clearCookies();
       
       // Navigate to the page
-      await page.goto('https://the-internet.herokuapp.com/abtest');
+      await page.goto('abtest');
       
       // Get the variant heading
       const variant = await page.locator('h3').textContent();
@@ -85,7 +85,7 @@ test.describe('A/B Testing', () => {
     console.log('Starting 10 page refreshes (same session, keeping cookies)...\n');
     
     // First visit
-    await page.goto('https://the-internet.herokuapp.com/abtest');
+    await page.goto('abtest');
     let variant = await page.locator('h3').textContent();
     let variantText = variant?.trim() || 'Unknown';
     variantsSeen.set(variantText, 1);
