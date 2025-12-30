@@ -62,16 +62,12 @@ test.describe('A/B Testing', () => {
       console.log(`  ${index + 1}. ${variant}`);
     });
     
-    // A/B TEST: Verify variant assignment is working
-    expect(variantsSeen.size).toBeGreaterThan(0);
+    // A/B TEST: Verify that different variants can be served to different users
+    // If only 1 variant is seen, the A/B test is not working properly
+    expect(variantsSeen.size).toBeGreaterThan(1);
     
-    // Log findings
-    if (variantsSeen.size === 1) {
-      console.log('\n⚠️  NOTE: Only one variant was seen across all 10 visits.');
-      console.log('   This suggests the A/B test may not be active or always serves the same variant.');
-    } else {
-      console.log('\n✅ Multiple variants detected! The A/B test is working.');
-    }
+    // Log success message
+    console.log('\n✅ Multiple variants detected! The A/B test is working correctly.');
   });
 
   /**
@@ -117,14 +113,12 @@ test.describe('A/B Testing', () => {
       console.log(`  "${variant}": ${count} times (${percentage}%)`);
     });
     
-    // In A/B testing, same user should see same variant (cookie persistence)
-    if (variantsSeen.size === 1) {
-      console.log('\n✅ Expected: Same variant across all refreshes (cookie persistence working)');
-    } else {
-      console.log('\n⚠️  Unexpected: Different variants seen in same session');
-    }
+    // A/B TEST: Verify cookie persistence - same user should always see same variant
+    // If more than 1 variant is seen, cookie persistence is not working
+    expect(variantsSeen.size).toBe(1);
     
-    expect(variantsSeen.size).toBeGreaterThan(0);
+    // Log success message
+    console.log('\n✅ Cookie persistence working: Same variant seen across all refreshes.');
   });
 });
 
