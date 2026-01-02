@@ -22,9 +22,9 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  /* In CI, use blob reporter for merging reports, HTML for final output */
+  /* In CI, use HTML reporter with custom output directory based on REPORT_OUTPUT_DIR env var */
   reporter: process.env.CI 
-    ? [['blob', { outputDir: process.env.BLOB_REPORT_DIR || 'test-results/blob-reports' }], ['html']]
+    ? [['html', { outputFolder: process.env.REPORT_OUTPUT_DIR || 'playwright-report' }]]
     : 'html',
   
   /* Visual comparison settings */
