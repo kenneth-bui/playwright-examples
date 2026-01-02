@@ -21,23 +21,25 @@ jobs:
     - name: Prepare test results directory
       run: mkdir -p test-results
     - name: Run Playwright tests (random selection)
+      env:
+        JSON_REPORT_PATH: test-results/functional-results.json
       run: |
-        npm run test:random -- --reporter=list --reporter=json || true
-        if [ -f test-results.json ]; then
-          echo "Moving test-results.json to test-results/functional-results.json"
-          mv test-results.json test-results/functional-results.json
+        npm run test:random || true
+        if [ -f test-results/functional-results.json ]; then
+          echo "✓ Functional test results JSON created"
         else
-          echo "Warning: test-results.json not found after functional tests"
+          echo "⚠ Warning: functional-results.json not found after functional tests"
         fi
       continue-on-error: true
     - name: Run Visual tests (all projects)
+      env:
+        JSON_REPORT_PATH: test-results/visual-results.json
       run: |
-        npx playwright test visual --reporter=list --reporter=json || true
-        if [ -f test-results.json ]; then
-          echo "Moving test-results.json to test-results/visual-results.json"
-          mv test-results.json test-results/visual-results.json
+        npx playwright test visual || true
+        if [ -f test-results/visual-results.json ]; then
+          echo "✓ Visual test results JSON created"
         else
-          echo "Warning: test-results.json not found after visual tests"
+          echo "⚠ Warning: visual-results.json not found after visual tests"
         fi
       continue-on-error: true
     - name: Debug - List test-results files
@@ -51,6 +53,7 @@ jobs:
       continue-on-error: true
     - name: Merge test reports and generate HTML
       if: always()
+      timeout-minutes: 5
       run: |
         mkdir -p test-results
         # Collect only the actual test report JSON files (exclude .last-run.json and other metadata)

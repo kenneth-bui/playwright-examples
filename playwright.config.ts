@@ -22,7 +22,10 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  /* In CI, use both HTML and JSON reporters for merging reports */
+  reporter: process.env.CI 
+    ? [['html'], ['json', { outputFile: process.env.JSON_REPORT_PATH || 'test-results.json' }]]
+    : 'html',
   
   /* Visual comparison settings */
   expect: {
