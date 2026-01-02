@@ -22,11 +22,33 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Visual Regression Tests', () => {
   
+  /**
+   * Normalize rendering across different operating systems
+   * This helps reduce false positives from OS-specific rendering differences
+   */
+  async function normalizeRendering(page: any) {
+    // Inject CSS to normalize font rendering across OS
+    await page.addStyleTag({
+      content: `
+        * {
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          text-rendering: optimizeLegibility;
+        }
+      `
+    });
+    // Wait a bit for styles to apply
+    await page.waitForTimeout(100);
+  }
+  
   test('Add/Remove Elements page - full page screenshot', async ({ page }) => {
     await page.goto('add_remove_elements/');
     
     // Wait for page to be fully loaded
     await page.waitForLoadState('networkidle');
+    
+    // Normalize rendering to reduce OS-specific differences
+    await normalizeRendering(page);
     
     // Take a screenshot and attach it to the test report (always visible)
     const screenshot = await page.screenshot({ fullPage: true });
@@ -54,6 +76,9 @@ test.describe('Visual Regression Tests', () => {
   test('Add/Remove Elements - after adding elements', async ({ page }) => {
     await page.goto('add_remove_elements/');
     await page.waitForLoadState('networkidle');
+    
+    // Normalize rendering to reduce OS-specific differences
+    await normalizeRendering(page);
     
     // Add 3 elements
     const addButton = page.getByRole('button', { name: 'Add Element' });

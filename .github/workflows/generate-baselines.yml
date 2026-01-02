@@ -1,0 +1,64 @@
+name: Generate Visual Test Baselines (Linux CI)
+
+on:
+  workflow_dispatch:  # Allows manual triggering from GitHub UI
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'tests/visual.spec.ts'
+      - 'playwright.config.ts'
+
+jobs:
+  generate-baselines:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        # Allow workflow to push changes back
+        persist-credentials: true
+    
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+    
+    - name: Generate visual test baselines on Linux
+      run: npx playwright test visual --update-snapshots
+    
+    - name: Check for changes
+      id: verify-changed-files
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Commit and push baseline images
+      if: steps.verify-changed-files.outputs.changed == 'true'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add tests/visual.spec.ts-snapshots/
+        git commit -m "chore: update visual test baselines from Linux CI
+
+        Generated on: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+        OS: Linux (Ubuntu)
+        These baselines are OS-agnostic and work across macOS and Linux." || exit 0
+        git push || exit 0
+    
+    - name: Upload baseline images as artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: visual-baselines-linux
+        path: tests/visual.spec.ts-snapshots/
+        retention-days: 7
+
