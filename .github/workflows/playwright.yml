@@ -20,35 +20,32 @@ jobs:
       run: npx playwright install --with-deps
     - name: Prepare test results directory
       run: mkdir -p test-results
-    - name: Run Playwright tests (random selection)
+    - name: Run Playwright tests
       env:
-        JSON_REPORT_PATH: test-results/functional-results.json
+        BLOB_REPORT_DIR: test-results/blob-reports-functional
       run: |
-        echo "JSON_REPORT_PATH is set to: $JSON_REPORT_PATH"
-        echo "CI environment: $CI"
+        echo "BLOB_REPORT_DIR is set to: $BLOB_REPORT_DIR"
         mkdir -p test-results
         npm run test:random || true
-        echo "Checking for JSON report..."
-        if [ -f test-results/functional-results.json ]; then
-          echo "✓ Functional test results JSON created"
-          ls -lh test-results/functional-results.json
+        echo "Checking for blob reports..."
+        if [ -d test-results/blob-reports-functional ] && [ "$(ls -A test-results/blob-reports-functional 2>/dev/null)" ]; then
+          echo "✓ Functional test blob reports created"
+          ls -la test-results/blob-reports-functional/ | head -5
         else
-          echo "⚠ Warning: functional-results.json not found after functional tests"
-          echo "Checking for JSON files in test-results:"
-          ls -la test-results/*.json 2>/dev/null || echo "No JSON files found"
-          echo "Checking for JSON files in root:"
-          ls -la *.json 2>/dev/null || echo "No JSON files in root"
+          echo "⚠ Warning: No blob reports found for functional tests"
         fi
       continue-on-error: true
-    - name: Run Visual tests (all projects)
+    - name: Run Visual tests
       env:
-        JSON_REPORT_PATH: test-results/visual-results.json
+        BLOB_REPORT_DIR: test-results/blob-reports-visual
       run: |
         npx playwright test visual || true
-        if [ -f test-results/visual-results.json ]; then
-          echo "✓ Visual test results JSON created"
+        echo "Checking for blob reports..."
+        if [ -d test-results/blob-reports-visual ] && [ "$(ls -A test-results/blob-reports-visual 2>/dev/null)" ]; then
+          echo "✓ Visual test blob reports created"
+          ls -la test-results/blob-reports-visual/ | head -5
         else
-          echo "⚠ Warning: visual-results.json not found after visual tests"
+          echo "⚠ Warning: No blob reports found for visual tests"
         fi
       continue-on-error: true
     - name: Debug - List test-results files
@@ -64,27 +61,30 @@ jobs:
       if: always()
       timeout-minutes: 5
       run: |
-        mkdir -p test-results
-        # Collect JSON report files into an array
-        JSON_FILES=()
-        if [ -f test-results/functional-results.json ]; then
-          JSON_FILES+=("test-results/functional-results.json")
-          echo "Found functional-results.json"
+        mkdir -p test-results/merge-reports
+        # Copy blob reports to merge directory
+        REPORT_COUNT=0
+        if [ -d test-results/blob-reports-functional ] && [ "$(ls -A test-results/blob-reports-functional 2>/dev/null)" ]; then
+          cp -r test-results/blob-reports-functional/* test-results/merge-reports/ 2>/dev/null || true
+          echo "Found functional blob reports"
+          REPORT_COUNT=$((REPORT_COUNT + 1))
         else
-          echo "functional-results.json not found"
+          echo "functional blob reports not found"
         fi
-        if [ -f test-results/visual-results.json ]; then
-          JSON_FILES+=("test-results/visual-results.json")
-          echo "Found visual-results.json"
+        if [ -d test-results/blob-reports-visual ] && [ "$(ls -A test-results/blob-reports-visual 2>/dev/null)" ]; then
+          cp -r test-results/blob-reports-visual/* test-results/merge-reports/ 2>/dev/null || true
+          echo "Found visual blob reports"
+          REPORT_COUNT=$((REPORT_COUNT + 1))
         else
-          echo "visual-results.json not found"
+          echo "visual blob reports not found"
         fi
         # Merge reports if we have any
-        if [ ${#JSON_FILES[@]} -gt 0 ]; then
-          echo "Merging ${#JSON_FILES[@]} report(s): ${JSON_FILES[*]}"
-          npx playwright merge-reports --reporter=html "${JSON_FILES[@]}"
+        if [ "$(ls -A test-results/merge-reports 2>/dev/null)" ]; then
+          echo "Merging blob reports from test-results/merge-reports/"
+          ls -la test-results/merge-reports/ | head -10
+          npx playwright merge-reports --reporter=html test-results/merge-reports
         else
-          echo "No JSON report files found to merge"
+          echo "No blob reports found to merge"
           echo "Skipping HTML report generation"
         fi
       continue-on-error: true
