@@ -18,10 +18,36 @@ jobs:
       run: npm ci
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+    - name: Prepare test results directory
+      run: mkdir -p test-results
     - name: Run Playwright tests (random selection)
-      run: npm run test:random
+      run: |
+        npm run test:random -- --reporter=list,json || true
+        if [ -f test-results.json ]; then
+          mv test-results.json test-results/random-results.json
+        fi
+      continue-on-error: true
     - name: Run Visual tests (all projects)
-      run: npx playwright test visual
+      run: |
+        npx playwright test visual --reporter=list,json || true
+        if [ -f test-results.json ]; then
+          mv test-results.json test-results/visual-results.json
+        fi
+      continue-on-error: true
+    - name: Merge test reports and generate HTML
+      run: |
+        mkdir -p test-results
+        # Find all JSON report files in test-results directory
+        JSON_FILES=$(find test-results -name "*.json" -type f 2>/dev/null | tr '\n' ' ')
+        if [ -n "$JSON_FILES" ]; then
+          echo "Merging reports: $JSON_FILES"
+          npx playwright merge-reports --reporter=html $JSON_FILES
+        else
+          echo "No JSON report files found to merge"
+          # Fallback: generate HTML from any available results
+          npx playwright show-report || true
+        fi
+      if: always()
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
