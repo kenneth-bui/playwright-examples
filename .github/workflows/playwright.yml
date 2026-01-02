@@ -24,11 +24,20 @@ jobs:
       env:
         JSON_REPORT_PATH: test-results/functional-results.json
       run: |
+        echo "JSON_REPORT_PATH is set to: $JSON_REPORT_PATH"
+        echo "CI environment: $CI"
+        mkdir -p test-results
         npm run test:random || true
+        echo "Checking for JSON report..."
         if [ -f test-results/functional-results.json ]; then
           echo "✓ Functional test results JSON created"
+          ls -lh test-results/functional-results.json
         else
           echo "⚠ Warning: functional-results.json not found after functional tests"
+          echo "Checking for JSON files in test-results:"
+          ls -la test-results/*.json 2>/dev/null || echo "No JSON files found"
+          echo "Checking for JSON files in root:"
+          ls -la *.json 2>/dev/null || echo "No JSON files in root"
         fi
       continue-on-error: true
     - name: Run Visual tests (all projects)
@@ -56,25 +65,24 @@ jobs:
       timeout-minutes: 5
       run: |
         mkdir -p test-results
-        # Collect only the actual test report JSON files (exclude .last-run.json and other metadata)
-        JSON_FILES=""
+        # Collect JSON report files into an array
+        JSON_FILES=()
         if [ -f test-results/functional-results.json ]; then
-          JSON_FILES="$JSON_FILES test-results/functional-results.json"
+          JSON_FILES+=("test-results/functional-results.json")
           echo "Found functional-results.json"
         else
           echo "functional-results.json not found"
         fi
         if [ -f test-results/visual-results.json ]; then
-          JSON_FILES="$JSON_FILES test-results/visual-results.json"
+          JSON_FILES+=("test-results/visual-results.json")
           echo "Found visual-results.json"
         else
           echo "visual-results.json not found"
         fi
-        # Trim leading space
-        JSON_FILES=$(echo "$JSON_FILES" | sed 's/^ *//')
-        if [ -n "$JSON_FILES" ]; then
-          echo "Merging reports: $JSON_FILES"
-          npx playwright merge-reports --reporter=html $JSON_FILES
+        # Merge reports if we have any
+        if [ ${#JSON_FILES[@]} -gt 0 ]; then
+          echo "Merging ${#JSON_FILES[@]} report(s): ${JSON_FILES[*]}"
+          npx playwright merge-reports --reporter=html "${JSON_FILES[@]}"
         else
           echo "No JSON report files found to merge"
           echo "Skipping HTML report generation"
