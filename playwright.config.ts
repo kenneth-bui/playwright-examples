@@ -37,6 +37,14 @@ export default defineConfig({
     toMatchSnapshot: { threshold: 0.2 },
   },
   
+  /* Use OS-agnostic snapshot names (remove OS from filename) */
+  /* This ensures baselines work across macOS (darwin) and Linux (CI) */
+  /* Dynamic folder per test file: visual.spec.ts -> visual.spec.ts-snapshots/ */
+  /* {testFilePath} is the relative path from testDir (e.g., "visual.spec.ts") */
+  /* Keeps separate snapshots per browser/device via {projectName} */
+  /* Removed {platform} to make snapshots OS-agnostic */
+  snapshotPathTemplate: '{testDir}/{testFilePath}-snapshots/{arg}-{projectName}{ext}',
+  
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */

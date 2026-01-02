@@ -23,7 +23,7 @@ npm run test:visual:ui
 
 ## How It Works
 
-1. **Baseline Images**: Stored in `tests/visual.spec.ts-snapshots/`
+1. **Baseline Images**: Stored in `tests/visual.spec.ts-snapshots/` (or `{testFile}-snapshots/` for other test files)
    - These are the "expected" screenshots
    - Commit these to your repository
 
@@ -68,13 +68,23 @@ When a visual test fails:
    - Fix the bug
    - Re-run tests
 
+## OS-Agnostic Snapshots
+
+Snapshots are configured to be OS-agnostic (work on both macOS and Linux):
+- **Config**: `snapshotPathTemplate: '{testDir}/{testFile}-snapshots/{arg}-{projectName}{ext}'`
+  - `{testFile}` creates dynamic folder per test file (e.g., `visual.spec.ts-snapshots/`)
+  - `{projectName}` keeps separate snapshots per browser/device
+  - Removed `{platform}` to make snapshots OS-agnostic
+- This removes the OS suffix (`-darwin` or `-linux`) from snapshot filenames
+- Ensures baselines work across different operating systems (macOS, Linux, Windows)
+
 ## Configuration
 
 Visual comparison settings are in `playwright.config.ts`:
 
 ```typescript
 expect: {
-  toHaveScreenshot: { threshold: 0.2, mode: 'strict' },
+  toHaveScreenshot: { threshold: 0.2 },
   toMatchSnapshot: { threshold: 0.2 },
 }
 ```
