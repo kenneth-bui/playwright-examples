@@ -79,22 +79,47 @@ jobs:
       if: always()
       timeout-minutes: 5
       run: |
+        echo "Current working directory: $(pwd)"
         mkdir -p test-results/merge-reports
+        # Debug: List all blob directories
+        echo "=== Searching for blob report directories ==="
+        find test-results -type d -name "*blob*" 2>/dev/null | while read dir; do
+          echo "Found: $dir"
+          ls -la "$dir" 2>/dev/null | head -3
+        done
+        echo ""
+        echo "=== Direct check of blob directories ==="
+        echo "Checking test-results/blob-reports-functional:"
+        ls -la test-results/blob-reports-functional 2>/dev/null || echo "Directory does not exist"
+        echo "Checking test-results/blob-reports-visual:"
+        ls -la test-results/blob-reports-visual 2>/dev/null || echo "Directory does not exist"
         # Copy blob reports to merge directory
         REPORT_COUNT=0
-        if [ -d test-results/blob-reports-functional ] && [ "$(ls -A test-results/blob-reports-functional 2>/dev/null)" ]; then
-          cp -r test-results/blob-reports-functional/* test-results/merge-reports/ 2>/dev/null || true
-          echo "Found functional blob reports"
-          REPORT_COUNT=$((REPORT_COUNT + 1))
+        if [ -d test-results/blob-reports-functional ]; then
+          echo "Checking test-results/blob-reports-functional..."
+          if [ "$(ls -A test-results/blob-reports-functional 2>/dev/null)" ]; then
+            echo "Copying functional blob reports..."
+            cp -r test-results/blob-reports-functional/* test-results/merge-reports/ 2>/dev/null || true
+            echo "Found functional blob reports"
+            REPORT_COUNT=$((REPORT_COUNT + 1))
+          else
+            echo "functional blob reports directory exists but is empty"
+          fi
         else
-          echo "functional blob reports not found"
+          echo "functional blob reports directory does not exist"
         fi
-        if [ -d test-results/blob-reports-visual ] && [ "$(ls -A test-results/blob-reports-visual 2>/dev/null)" ]; then
-          cp -r test-results/blob-reports-visual/* test-results/merge-reports/ 2>/dev/null || true
-          echo "Found visual blob reports"
-          REPORT_COUNT=$((REPORT_COUNT + 1))
+        if [ -d test-results/blob-reports-visual ]; then
+          echo "Checking test-results/blob-reports-visual..."
+          if [ "$(ls -A test-results/blob-reports-visual 2>/dev/null)" ]; then
+            echo "Copying visual blob reports..."
+            cp -r test-results/blob-reports-visual/* test-results/merge-reports/ 2>/dev/null || true
+            echo "Found visual blob reports"
+            REPORT_COUNT=$((REPORT_COUNT + 1))
+          else
+            echo "visual blob reports directory exists but is empty"
+          fi
         else
-          echo "visual blob reports not found"
+          echo "visual blob reports directory does not exist"
         fi
         # Merge reports if we have any
         if [ "$(ls -A test-results/merge-reports 2>/dev/null)" ]; then
