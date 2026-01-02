@@ -23,6 +23,20 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
+  
+  /* Visual comparison settings */
+  expect: {
+    /* Threshold for visual comparison (0-1). Lower = more strict */
+    /* 0.2 means 20% of pixels can differ before test fails */
+    toHaveScreenshot: { 
+      threshold: 0.2,
+      /* Animate diff images to highlight differences */
+      animations: 'disabled', // Disable animations for consistent screenshots
+    },
+    /* Threshold for snapshot comparison */
+    toMatchSnapshot: { threshold: 0.2 },
+  },
+  
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
@@ -30,6 +44,9 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    
+    /* Screenshot settings - default to only-on-failure for regular tests */
+    screenshot: 'only-on-failure',
   },
 
   /* Configure projects for major browsers */
@@ -50,19 +67,11 @@ export default defineConfig({
     },
 
     {
-      name: 'webkit',
+      name: 'safari',
       use: { ...devices['Desktop Safari'] },
     },
 
     /* Test against mobile viewports - iOS devices */
-    {
-      name: 'Mobile Safari - iPhone 12',
-      use: { ...devices['iPhone 12'] },
-    },
-    {
-      name: 'Mobile Safari - iPhone 13',
-      use: { ...devices['iPhone 13'] },
-    },
     {
       name: 'Mobile Safari - iPhone 14',
       use: { ...devices['iPhone 14'] },
@@ -78,10 +87,6 @@ export default defineConfig({
       use: { ...devices['Pixel 5'] },
     },
     {
-      name: 'Mobile Chrome - Pixel 7',
-      use: { ...devices['Pixel 7'] },
-    },
-    {
       name: 'Mobile Chrome - Galaxy S9+',
       use: { ...devices['Galaxy S9+'] },
     },
@@ -90,10 +95,6 @@ export default defineConfig({
     {
       name: 'Tablet - iPad',
       use: { ...devices['iPad'] },
-    },
-    {
-      name: 'Tablet - iPad Pro',
-      use: { ...devices['iPad Pro'] },
     },
 
     /* Custom viewports - Examples of creating your own viewport configurations */

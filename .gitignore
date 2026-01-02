@@ -7,3 +7,7 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 .DS_Store
+
+# Visual test snapshots (keep baseline images, ignore diff/actual)
+**/test-results/**/*-actual.png
+**/test-results/**/*-diff.png
