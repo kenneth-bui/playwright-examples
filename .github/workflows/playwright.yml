@@ -19,6 +19,8 @@ jobs:
       run: npx playwright install --with-deps
     - name: Run Playwright tests (random selection)
       run: npm run test:random
+    - name: Run Visual tests (all projects)
+      run: npx playwright test visual
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
