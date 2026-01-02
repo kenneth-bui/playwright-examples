@@ -22,28 +22,50 @@ jobs:
       run: mkdir -p test-results
     - name: Run Playwright tests (random selection)
       run: |
-        npm run test:random -- --reporter=list,json || true
+        npm run test:random -- --reporter=list --reporter=json || true
         if [ -f test-results.json ]; then
+          echo "Moving test-results.json to test-results/functional-results.json"
           mv test-results.json test-results/functional-results.json
+        else
+          echo "Warning: test-results.json not found after functional tests"
         fi
       continue-on-error: true
     - name: Run Visual tests (all projects)
       run: |
-        npx playwright test visual --reporter=list,json || true
+        npx playwright test visual --reporter=list --reporter=json || true
         if [ -f test-results.json ]; then
+          echo "Moving test-results.json to test-results/visual-results.json"
           mv test-results.json test-results/visual-results.json
+        else
+          echo "Warning: test-results.json not found after visual tests"
         fi
       continue-on-error: true
+    - name: Debug - List test-results files
+      if: always()
+      run: |
+        echo "=== Files in test-results directory ==="
+        ls -la test-results/ 2>/dev/null || echo "test-results directory does not exist"
+        echo ""
+        echo "=== JSON files in project root ==="
+        ls -la *.json 2>/dev/null || echo "No JSON files in root"
+      continue-on-error: true
     - name: Merge test reports and generate HTML
+      if: always()
       run: |
         mkdir -p test-results
         # Collect only the actual test report JSON files (exclude .last-run.json and other metadata)
         JSON_FILES=""
         if [ -f test-results/functional-results.json ]; then
           JSON_FILES="$JSON_FILES test-results/functional-results.json"
+          echo "Found functional-results.json"
+        else
+          echo "functional-results.json not found"
         fi
         if [ -f test-results/visual-results.json ]; then
           JSON_FILES="$JSON_FILES test-results/visual-results.json"
+          echo "Found visual-results.json"
+        else
+          echo "visual-results.json not found"
         fi
         # Trim leading space
         JSON_FILES=$(echo "$JSON_FILES" | sed 's/^ *//')
@@ -52,10 +74,9 @@ jobs:
           npx playwright merge-reports --reporter=html $JSON_FILES
         else
           echo "No JSON report files found to merge"
-          # Fallback: generate HTML from any available results
-          npx playwright show-report || true
+          echo "Skipping HTML report generation"
         fi
-      if: always()
+      continue-on-error: true
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
