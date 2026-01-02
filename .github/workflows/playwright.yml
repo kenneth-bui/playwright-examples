@@ -25,14 +25,19 @@ jobs:
         BLOB_REPORT_DIR: test-results/blob-reports-functional
       run: |
         echo "BLOB_REPORT_DIR is set to: $BLOB_REPORT_DIR"
-        mkdir -p test-results
+        echo "CI environment: $CI"
+        mkdir -p test-results/blob-reports-functional
         npm run test:random || true
         echo "Checking for blob reports..."
+        echo "Contents of test-results directory:"
+        ls -la test-results/ | grep -E "blob|functional" || echo "No blob/functional directories found"
         if [ -d test-results/blob-reports-functional ] && [ "$(ls -A test-results/blob-reports-functional 2>/dev/null)" ]; then
           echo "✓ Functional test blob reports created"
           ls -la test-results/blob-reports-functional/ | head -5
         else
           echo "⚠ Warning: No blob reports found for functional tests"
+          echo "Checking all directories in test-results:"
+          find test-results -type d -maxdepth 2 | head -10
         fi
       continue-on-error: true
     - name: Run Visual tests
@@ -53,6 +58,19 @@ jobs:
       run: |
         echo "=== Files in test-results directory ==="
         ls -la test-results/ 2>/dev/null || echo "test-results directory does not exist"
+        echo ""
+        echo "=== Blob report directories ==="
+        find test-results -type d -name "*blob*" 2>/dev/null || echo "No blob directories found"
+        echo ""
+        echo "=== Contents of blob directories ==="
+        if [ -d test-results/blob-reports-functional ]; then
+          echo "Functional blob reports:"
+          ls -la test-results/blob-reports-functional/ 2>/dev/null || echo "Directory empty or doesn't exist"
+        fi
+        if [ -d test-results/blob-reports-visual ]; then
+          echo "Visual blob reports:"
+          ls -la test-results/blob-reports-visual/ 2>/dev/null || echo "Directory empty or doesn't exist"
+        fi
         echo ""
         echo "=== JSON files in project root ==="
         ls -la *.json 2>/dev/null || echo "No JSON files in root"

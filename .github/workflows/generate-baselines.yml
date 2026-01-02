@@ -1,12 +1,7 @@
 name: Generate Visual Test Baselines (Linux CI)
 
 on:
-  workflow_dispatch:  # Allows manual triggering from GitHub UI
-  push:
-    branches: [ main, master ]
-    paths:
-      - 'tests/visual.spec.ts'
-      - 'playwright.config.ts'
+  workflow_dispatch:  # Only manual triggering from GitHub UI
 
 jobs:
   generate-baselines:
