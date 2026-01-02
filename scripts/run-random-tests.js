@@ -14,49 +14,118 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// Define project categories
-const desktopBrowsers = ['chromium', 'firefox', 'edge', 'webkit'];
-const mobileSafari = [
-  'Mobile Safari - iPhone 12',
-  'Mobile Safari - iPhone 13',
-  'Mobile Safari - iPhone 14',
-  'Mobile Safari - iPhone SE'
-];
-const mobileChrome = [
-  'Mobile Chrome - Pixel 5',
-  'Mobile Chrome - Pixel 7',
-  'Mobile Chrome - Galaxy S9+'
-];
-const tablets = [
-  'Tablet - iPad',
-  'Tablet - iPad Pro'
-];
+/**
+ * Parse playwright.config.ts to extract project names and categorize them
+ */
+function parseProjectsFromConfig() {
+  const configPath = path.join(__dirname, '..', 'playwright.config.ts');
+  const configContent = fs.readFileSync(configPath, 'utf8');
+  
+  // Extract project names using regex
+  // Matches: name: 'project-name' or name: "project-name"
+  const projectNameRegex = /name:\s*['"]([^'"]+)['"]/g;
+  const projects = [];
+  let match;
+  
+  while ((match = projectNameRegex.exec(configContent)) !== null) {
+    projects.push(match[1]);
+  }
+  
+  // Categorize projects based on naming patterns
+  const desktopBrowsers = projects.filter(name => {
+    const lowerName = name.toLowerCase();
+    // Desktop browsers are typically: chromium, firefox, edge, safari, webkit
+    // and don't contain "mobile" or "tablet"
+    return !lowerName.includes('mobile') && 
+           !lowerName.includes('tablet') &&
+           (lowerName === 'chromium' || 
+            lowerName === 'firefox' || 
+            lowerName === 'edge' || 
+            lowerName === 'safari' || 
+            lowerName === 'webkit');
+  });
+  
+  const mobileSafari = projects.filter(name => 
+    name.startsWith('Mobile Safari')
+  );
+  
+  const mobileChrome = projects.filter(name => 
+    name.startsWith('Mobile Chrome')
+  );
+  
+  const tablets = projects.filter(name => 
+    name.startsWith('Tablet')
+  );
+  
+  return {
+    desktopBrowsers,
+    mobileSafari,
+    mobileChrome,
+    tablets
+  };
+}
+
+// Dynamically get project categories from playwright.config.ts
+const projectCategories = parseProjectsFromConfig();
+const desktopBrowsers = projectCategories.desktopBrowsers;
+const mobileSafari = projectCategories.mobileSafari;
+const mobileChrome = projectCategories.mobileChrome;
+const tablets = projectCategories.tablets;
+
+// Validate that we have at least one desktop browser (required)
+if (desktopBrowsers.length === 0) {
+  console.error('❌ No desktop browsers found in playwright.config.ts');
+  process.exit(1);
+}
+
+// Warn about missing optional categories
+if (mobileSafari.length === 0) {
+  console.warn('⚠️  No mobile Safari projects found in playwright.config.ts');
+}
+if (mobileChrome.length === 0) {
+  console.warn('⚠️  No mobile Chrome projects found in playwright.config.ts');
+}
+if (tablets.length === 0) {
+  console.warn('⚠️  No tablet projects found in playwright.config.ts');
+}
 
 // Random selection function
 function randomSelect(array) {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-// Select one random project from each category
+// Select one random project from each category (only if category has projects)
 const selectedDesktop = randomSelect(desktopBrowsers);
-const selectedMobileSafari = randomSelect(mobileSafari);
-const selectedMobileChrome = randomSelect(mobileChrome);
-const selectedTablet = randomSelect(tablets);
+const selectedMobileSafari = mobileSafari.length > 0 ? randomSelect(mobileSafari) : null;
+const selectedMobileChrome = mobileChrome.length > 0 ? randomSelect(mobileChrome) : null;
+const selectedTablet = tablets.length > 0 ? randomSelect(tablets) : null;
 
-// Build the project list
-const selectedProjects = [
-  selectedDesktop,
-  selectedMobileSafari,
-  selectedMobileChrome,
-  selectedTablet
-];
+// Build the project list (only include categories that have projects)
+const selectedProjects = [selectedDesktop];
+if (selectedMobileSafari) selectedProjects.push(selectedMobileSafari);
+if (selectedMobileChrome) selectedProjects.push(selectedMobileChrome);
+if (selectedTablet) selectedProjects.push(selectedTablet);
+
+// Log available projects
+console.log('📋 Available Projects (from playwright.config.ts):');
+console.log(`   Desktop Browsers: ${desktopBrowsers.join(', ')}`);
+console.log(`   Mobile Safari: ${mobileSafari.length > 0 ? mobileSafari.join(', ') : 'None'}`);
+console.log(`   Mobile Chrome: ${mobileChrome.length > 0 ? mobileChrome.join(', ') : 'None'}`);
+console.log(`   Tablets: ${tablets.length > 0 ? tablets.join(', ') : 'None'}`);
+console.log('');
 
 // Log the selections
 console.log('🎲 Randomly Selected Projects:');
 console.log(`   Desktop Browser: ${selectedDesktop}`);
-console.log(`   Mobile Safari: ${selectedMobileSafari}`);
-console.log(`   Mobile Chrome: ${selectedMobileChrome}`);
-console.log(`   Tablet: ${selectedTablet}`);
+if (mobileSafari.length > 0) {
+  console.log(`   Mobile Safari: ${selectedMobileSafari}`);
+}
+if (mobileChrome.length > 0) {
+  console.log(`   Mobile Chrome: ${selectedMobileChrome}`);
+}
+if (tablets.length > 0) {
+  console.log(`   Tablet: ${selectedTablet}`);
+}
 console.log('');
 
 // Automatically discover all test files, excluding visual.spec.ts
