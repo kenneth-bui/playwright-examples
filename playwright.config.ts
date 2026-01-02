@@ -40,13 +40,13 @@ export default defineConfig({
     toMatchSnapshot: { threshold: 0.3 },
   },
   
-  /* Use OS-agnostic snapshot names (remove OS from filename) */
-  /* This ensures baselines work across macOS (darwin) and Linux (CI) */
-  /* Dynamic folder per test file: visual.spec.ts -> visual.spec.ts-snapshots/ */
+  /* Use OS-specific snapshot folders for separate baselines per platform */
+  /* Platform values: darwin (macOS), linux (Linux CI), win32 (Windows) */
+  /* Dynamic folder per test file and OS: visual.spec.ts -> visual.spec.ts-snapshots-darwin/ or visual.spec.ts-snapshots-linux/ */
   /* {testFilePath} is the relative path from testDir (e.g., "visual.spec.ts") */
   /* Keeps separate snapshots per browser/device via {projectName} */
-  /* Removed {platform} to make snapshots OS-agnostic */
-  snapshotPathTemplate: '{testDir}/{testFilePath}-snapshots/{arg}-{projectName}{ext}',
+  /* Separate baselines allow OS-specific rendering differences (fonts, anti-aliasing, etc.) */
+  snapshotPathTemplate: '{testDir}/{testFilePath}-snapshots-{platform}/{arg}-{projectName}{ext}',
   
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {

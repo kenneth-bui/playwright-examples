@@ -46,12 +46,12 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add tests/visual.spec.ts-snapshots/
+        git add tests/visual.spec.ts-snapshots-linux/
         git commit -m "chore: update visual test baselines from Linux CI
 
         Generated on: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
         OS: Linux (Ubuntu)
-        These baselines are OS-agnostic and work across macOS and Linux." || exit 0
+        These baselines are Linux-specific and stored separately from macOS baselines." || exit 0
         git push || exit 0
     
     - name: Upload baseline images as artifact
@@ -59,6 +59,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: visual-baselines-linux
-        path: tests/visual.spec.ts-snapshots/
+        path: tests/visual.spec.ts-snapshots-linux/
         retention-days: 7
 
