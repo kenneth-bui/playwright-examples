@@ -2,12 +2,13 @@ import { test, expect } from '@playwright/test';
 
 /**
  * Note: Screenshots from toHaveScreenshot() are automatically:
- * 1. Attached to the HTML test report (visible even when tests pass)
+ * 1. Attached to the HTML test report (visible when tests pass)
  * 2. When tests fail, Playwright automatically generates:
  *    - baseline.png (expected image)
  *    - actual.png (current screenshot)
  *    - diff.png (differences highlighted in red)
  * 
+ * Screenshots are only captured on failure (configured in playwright.config.ts)
  * View the HTML report: npx playwright show-report
  */
 
@@ -50,13 +51,6 @@ test.describe('Visual Regression Tests', () => {
     // Normalize rendering to reduce OS-specific differences
     await normalizeRendering(page);
     
-    // Take a screenshot and attach it to the test report (always visible)
-    const screenshot = await page.screenshot({ fullPage: true });
-    await test.info().attach('screenshot', {
-      body: screenshot,
-      contentType: 'image/png',
-    });
-    
     // Take full page screenshot and compare with baseline
     // Note: This test runs across ALL projects (desktop browsers, mobile devices, tablets),
     // so it automatically covers different viewports:
@@ -88,13 +82,6 @@ test.describe('Visual Regression Tests', () => {
     
     // Wait for elements to be added
     await page.waitForTimeout(500);
-    
-    // Take a screenshot and attach it to the test report (always visible)
-    const screenshot = await page.screenshot({ fullPage: true });
-    await test.info().attach('screenshot', {
-      body: screenshot,
-      contentType: 'image/png',
-    });
     
     // Capture full page screenshot with elements added
     // Note: This captures all elements (Add button, Delete buttons) in context,
